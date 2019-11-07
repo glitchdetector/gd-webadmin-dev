@@ -1,0 +1,193 @@
+<div class=".mybod">
+	<style type="text/css">
+		.mybod {font-family: "Segoe UI", sans-serif;width: 2048px;height: 2048px;}
+		#map, .mapBox, #mapCanvas {position: absolute;left: 0px;top: 0px;}
+		#infoBox {position: absolute;top: 2048px;}
+		.icon {position: absolute;border: 4px solid black;border-radius: 8px;}
+	</style>
+    <img id="map" src="https://i.imgur.com/6T9UmkS.jpg"/>
+	<canvas id="mapCanvas" width="2048" height="2048"></canvas>
+    <div id="mapBox-0" class="mapBox"></div>
+    <div id="mapBox-1" class="mapBox"></div>
+    <div id="mapBox-2" class="mapBox"></div>
+    <div id="mapBox-3" class="mapBox"></div>
+    <div id="mapBox-4" class="mapBox"></div>
+    <div id="mapBox-5" class="mapBox"></div>
+    <div id="mapBox-6" class="mapBox"></div>
+    <div id="mapBox-7" class="mapBox"></div>
+    <div id="mapBox-8" class="mapBox"></div>
+    <div id="mapBox-9" class="mapBox"></div>
+	<div id="infoBox">
+		<p>You can specify the following parameters:</p>
+		<p><b>highlight</b>: An ID you want to follow, if specified this is the only person you see, should be used together with <b>server</b>. Default: all</p>
+		<p><b>server</b>: The port id of the server you wish to see players from, is the server number in most cases exept server 1, which is port id 0. Default: all</p>
+		<p><b>vehicle</b>: The vehicle type you want to show, can be foot, land, boat, helicopter, plane, train. Default: all</p>
+		<p><b>class</b>: The vehicle class you want to show, takes the class index, can be found in the <a href="https://runtime.fivem.net/doc/natives/#_0x29439776AAA00A62">FiveM Native Reference</a>. Default: all</p>
+		<p><b>job</b>: Shows only players with the specified job (can also be part of job name), takes the internal group id of the job. Default: all</p>
+		<p><b>lines</b>: Draw path lines, set to no to disable. Default: yes</p>
+		<p><b>clamping</b>: Prevent clipping outside the map borders, set to no to disable. Default: yes</p>
+		<p><b>localhost</b>: Only show the server you're asking for the map from, set to no to show all Tycoon servers. Default: yes</p>
+		<p><b>color</b>: The color mode for the map icons, can be player, server, none. Default: player</p>
+	</div>
+	<script>
+		var getUrlParameter = function getUrlParameter(sParam) {
+		    var sPageURL = window.location.search.substring(1),sURLVariables = sPageURL.split('&'),sParameterName,i;
+		    for (i = 0; i < sURLVariables.length; i++) {sParameterName = sURLVariables[i].split('=');if (sParameterName[0] === sParam) {return sParameterName[1] === undefined ? true : decodeURIComponent(sParameterName[1]);}}
+		};
+		const ColorCodes = [
+			"AliceBlue","AntiqueWhite","Aqua","Aquamarine","Azure","Beige","Bisque","Black",
+			"BlanchedAlmond","Blue","BlueViolet","Brown","BurlyWood","CadetBlue","Chartreuse","Chocolate",
+			"Coral","CornflowerBlue","Cornsilk","Crimson","Cyan","DarkBlue","DarkCyan","DarkGoldenRod",
+			"DarkGray","DarkGrey","DarkGreen","DarkKhaki","DarkMagenta","DarkOliveGreen","DarkOrange",
+			"DarkOrchid","DarkRed","DarkSalmon","DarkSeaGreen","DarkSlateBlue","DarkSlateGray","DarkSlateGrey",
+			"DarkTurquoise","DarkViolet","DeepPink","DeepSkyBlue","DimGray","DimGrey","DodgerBlue","FireBrick",
+			"FloralWhite","ForestGreen","Fuchsia","Gainsboro","GhostWhite","Gold","GoldenRod","Gray","Grey",
+			"Green","GreenYellow","HoneyDew","HotPink","IndianRed","Indigo","Ivory","Khaki",
+			"Lavender","LavenderBlush","LawnGreen","LemonChiffon","LightBlue","LightCoral","LightCyan",
+			"LightGoldenRodYellow","LightGray","LightGrey","LightGreen","LightPink","LightSalmon","LightSeaGreen",
+			"LightSkyBlue","LightSlateGray","LightSlateGrey","LightSteelBlue","LightYellow","Lime",
+			"LimeGreen","Linen","Magenta","Maroon","MediumAquaMarine","MediumBlue","MediumOrchid","MediumPurple",
+			"MediumSeaGreen","MediumSlateBlue","MediumSpringGreen","MediumTurquoise","MediumVioletRed","MidnightBlue","MintCream",
+			"MistyRose","Moccasin","NavajoWhite","Navy","OldLace","Olive","OliveDrab","Orange","OrangeRed",
+			"Orchid","PaleGoldenRod","PaleGreen","PaleTurquoise","PaleVioletRed","PapayaWhip",
+			"PeachPuff","Peru","Pink","Plum","PowderBlue","Purple","RebeccaPurple","Red","RosyBrown",
+			"RoyalBlue","SaddleBrown","Salmon","SandyBrown","SeaGreen","SeaShell","Sienna","Silver",
+			"SkyBlue","SlateBlue","SlateGray","SlateGrey","Snow","SpringGreen","SteelBlue","Tan","Teal","Thistle",
+			"Tomato","Turquoise","Violet","Wheat","White","WhiteSmoke","Yellow","YellowGreen",
+		]
+		const ServerName = [
+			"Server 1", "Rrerr", "Server 2", "Gay Baby Jail", "Server 4", "Server 5",
+			"Server 6", "Server 7", "Server 8", "Server 9", "Server Ten"
+		]
+		const VehicleClasses = [
+			"Compact Car","Sedan","SUV","Coupe",
+			"Muscle Car","Sports Classic","Sports Car","Super Car","Motorcycle","Off-road Car",
+			"Industrial Vehicle","Utility Vehicle","Van","Cycle","Boat","Helicopter",
+			"Plane","Service Vehicle","Emergency Vehicle","Military Vehicle","Commercial Vehicle","Train",
+		]
+		const VehicleClassPrefix = [
+			"Driving a","Driving a","Driving an","Driving a",
+			"Driving a","Driving a","Driving a","Driving a","Riding a","Driving an",
+			"Operating an","Operating a","Driving a","Riding a","Cruising in a","Flying a",
+			"Flying a","Operating a","Operating an","Patrolling in a","Driving a","Operating a",
+		]
+		const BLIPSIZE = 3
+		const highlightId = getUrlParameter("highlight") || "all";
+		const serverId = getUrlParameter("server") || "all";
+		const vehicleType = getUrlParameter("vehicle") || "all";
+		const vehicleClass = getUrlParameter("class") || "all";
+		const jobGroup = getUrlParameter("job") || "all";
+		const drawLines = getUrlParameter("lines") || "yes";
+		const drawClipping = getUrlParameter("clamping") || "yes";
+		const localHost = getUrlParameter("localhost") || "yes";
+		const colorMode = getUrlParameter("color") || "player";
+		PLAYERS = {}
+		function fetchClients() {
+			var j
+			for (j = 0; j <= 9; j++) {
+				if ((serverId == "all" || serverId == j) && (j != 1 && j != 3) && (localHost == "no" || j == 0)) {
+					let i = j
+					var fetchUrl = 'localhost:3012' + i + '/status/map/positions.json'
+					if (localHost == "yes") {
+						fetchUrl = '/status/map/positions.json'
+					}
+					if (highlightId != "all" && serverId == "all" && localHost == "no") {
+						const el = document.querySelector('#mapBox-' + i);
+						el.innerHTML = '<p>Query magnitude too extreme</p>';
+						return false;
+					}
+					fetch(fetchUrl).then(res => res.json()).then(res => {
+						const el = document.querySelector('#mapBox-' + i);
+						var c = document.getElementById("mapCanvas");
+						var ctx = c.getContext("2d");
+						el.innerHTML = '';
+
+						const clients = res.players;
+
+						// ctx.clearRect(0, 0, 2048, 2048);
+						for (const client of clients) {
+		                    const pos = client[3];
+		                    const veh = client[4] || {vehicle_type: "foot", vehicle_class: -1, vehicle_name: "None", vehicle_label: "NULL", vehicle_model: -1};
+							const job = client[5] || {group: "citizen", name: "Citizen"};
+							var color = ColorCodes[client[2] % ColorCodes.length]
+							if (colorMode == "server") {
+								color = ColorCodes[((i + 1) * 9) % ColorCodes.length]
+							} else if (colorMode == "none") {
+								color = "white";
+							}
+							if (veh.vehicle_class != -1) {
+								var sum = 0;
+								for (var _ss = 0; _ss < veh.vehicle_label.length; _ss++) {
+								  	sum += veh.vehicle_label.charCodeAt(_ss);
+								}
+								color = ColorCodes[((sum + 1) * 9) % ColorCodes.length];
+							}
+							if (pos != undefined && veh != undefined && job != undefined) {
+								if (jobGroup == "all" || job.group.includes(jobGroup)) {
+									if (vehicleType == "all" || veh.vehicle_type == vehicleType) {
+										if (vehicleClass == "all" || veh.vehicle_class == vehicleClass) {
+											if (highlightId == "all" || highlightId == client[2]) {
+												var x = 940 + Math.floor(pos.x / 6) - (BLIPSIZE/2)
+												var y = 1385 - Math.floor(pos.y / 6) - (BLIPSIZE/2)
+												if (drawClipping == "yes") {
+													x = Math.min(Math.max(x, 0 + (BLIPSIZE*0.5)), 2048 - (BLIPSIZE*0.5));
+													y = Math.min(Math.max(y, 0 + (BLIPSIZE*0.5)), 2048 - (BLIPSIZE*0.5));
+												}
+												var old_x = x;
+												var old_y = y;
+												if (PLAYERS[client[2]] != null) {
+													old_x = PLAYERS[client[2]].x;
+													old_y = PLAYERS[client[2]].y;
+													if (Math.abs(old_x - x) < 150 && Math.abs(old_y - y) < 150) {
+														if (drawLines == "yes") {
+															ctx.beginPath();
+															ctx.lineWidth = "2";
+															ctx.strokeStyle = "black"; // Green path
+															ctx.moveTo(old_x + BLIPSIZE/2, old_y + BLIPSIZE/2);
+															ctx.lineTo(x + BLIPSIZE/2, y + BLIPSIZE/2);
+															ctx.stroke(); // Draw it
+															ctx.lineWidth = "2";
+															ctx.strokeStyle = color; // Green path
+															ctx.stroke(); // Draw it
+														}
+													}
+												}
+												PLAYERS[client[2]] = {x: x, y: y};
+												const l = document.createElement('span');
+
+												var titleText = ""
+												titleText += client[0]; // Name
+												titleText += "\n" + "User ID: " + client[2]; // User ID
+												titleText += "\n" + "Job: " + job.name; // User ID
+												titleText += "\n" + ServerName[i]; // Server
+												l.setAttribute('style', 'width:'+BLIPSIZE+'px;height:'+BLIPSIZE+'px;left:'+x+'px;top:'+y+'px;background-color:'+color);
+												if (veh.vehicle_class != -1) {
+													titleText += "\n" + VehicleClassPrefix[veh.vehicle_class] + " " + VehicleClasses[veh.vehicle_class] + ", " + veh.vehicle_name; // Vehicle type
+													l.innerHTML = "<span style='font-size:12px;color:white;padding-left:5px;position:relative;bottom:23px;'><span style='background-color:black;opacity:0.8'>" + veh.vehicle_label.toUpperCase() + "</span></span><br/><span style='font-size:12px;padding-left:5px;position:relative;bottom:28px;color:white;'><span style='background-color:black;opacity:0.8'>" + client[0].replace(/[^\x00-\x7F]/g, "").replace(/\s/g, "_") + "</span></span>";
+
+												} else {
+													titleText += "\nOn foot"; // Not in a vehicle
+													l.innerHTML = "<span style='font-size:12px;padding-left:5px;position:relative;bottom:12px;color:white;'><span style='background-color:black;opacity:0.8'>" + client[0].replace(/[^\x00-\x7F]/g, "").replace(/\s/g, "_") + "</span></span>";
+
+												}
+
+
+												l.setAttribute('title', titleText);
+												l.setAttribute('class', 'icon');
+
+												el.appendChild(l);
+											}
+										}
+									}
+								}
+							}
+						}
+					});
+				}
+			}
+		}
+		fetchClients();
+		setInterval(() => fetchClients(), 8000);
+	</script>
+
+</div>
